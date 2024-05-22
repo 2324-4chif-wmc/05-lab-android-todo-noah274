@@ -1,7 +1,7 @@
 = Übung - Android mit RxJava3
-Thomas Stütz
+Noah Gabriel Grundner
 1.0.0, {docdate}
-:imagesdir: img
+:imagesdir: images
 :icons: font
 :sectnums:    // Nummerierung der Überschriften / section numbering
 // :toc:
@@ -18,44 +18,92 @@ endif::[]
 
 image::https://img.shields.io/badge/version-1.0.0-blue[]
 
-[sidcrete]
-== Dokumentation
+== Own Documentation
 
-* Dokumentieren Sie hier grob Ihre durchgeführten Arbeiten, mit
+=== Aufgabe 1
+Durch das Erstellen von der Android App, fügte ich gleich die Models fest. Dadurch kann ich die Todos vom Json Placeholder holen. Inhalt dieser Modelle sind: REST-Endpoints, Single Source of Truth, ToDos.
 
-** Datenmodell
-** Screenshots und
-** textuelle Übersicht über die erledigten Aufgaben.
-** Ev. Links zu den einzelnen Teilen
+Model:
+[source,java]
+----
+public class Model {
+    public static class UIState {
+        public int selectedTab = 0;
+    }
+    public ToDo[] toDos = new ToDo[0];
+    public UIState uiState = new UIState();
+}
+----
 
-IMPORTANT: Ziel ist es, dass die von Ihnen geleistete Arbeit auch "gefunden" und korrekt bewertet wird.
+ToDo:
+[source,java]
+----
+package at.htl.todo.model;
 
-== Aufgabe - Erstellen Sie das Basisprojekt
+public class ToDo {
+    public Long userId;
+    public Long id;
+    public String title;
+    public boolean completed;
 
-* Erstellen Sie in diesem Repo ein Android-Projekt im Verzeichnis `todo`.
+    public ToDo() {
+    }
+}
 
-* Verwenden Sie hierzu als Arbeitsanleitung folgendes Tutorial https://htl-leonding-college.github.io/android-reactive-java-todo[Android Lab: Reactive App with Java^]
+----
 
+ModelStore:
+[source,java]
+----
+package at.htl.todo.model;
 
-== Aufgabe - Überarbeiten Sie das Frontend
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
-* Erstellen Sie ein eigenes Frontend mit Übersichtsseite und Detailseite.
-** https://developer.android.com/develop/ui/compose/components[Material components in Compose^]
-** https://www.composables.com/[Discover every Jetpack Compose Component in one place^]
+import at.htl.todo.util.store.Store;
 
-* Versuchen Sie bei der Gestaltung die UI-Gestaltungsprinzipien einzuhalten:
+@Singleton
+public class ModelStore extends Store<Model> {
 
-** https://maze.co/collections/ux-ui-design/ui-design-principles/[The 6 key principles of UI design^]
-** https://medium.com/@NALSengineering/10-principles-in-ui-design-enhancing-user-experience-through-practical-examples-9d519e91b515[10 Principles in UI Design: Enhancing User Experience through Practical Examples^]
-** https://hackernoon.com/10-essential-mobile-app-ui-design-principles-for-building-outstanding-apps[10 Essential Mobile App UI Design Principles for Building Outstanding Apps^]
+    @Inject
+    ModelStore() {
+        super(Model.class, new Model());
+    }
 
-== Aufgabe - Android-Projekt mit mehreren Entitäten
+    public void setToDos(ToDo[] toDos) {
+        apply(model -> model.toDos = toDos);
+    }
+    public void selectTab(int tabIndex) {
+        apply(model -> model.uiState.selectedTab = tabIndex);
+    }
+    public void setToDoDone(ToDo todo, boolean done){
+        apply(model -> model.toDos[todo.id.intValue()-1].completed = done);
+    }
+}
 
-* Erstellen Sie ein neues Android-Projekt mit mehreren Entitäten und auch mit DTOs
+----
 
-** REST-Service-Client
-** Business Logik mit RxJava
-** Ausgabe der Daten auf UI (Jetpack Compose)
+Ordnerstruktur:
 
-* Verwenden Sie hierzu ein neues Unterverzeichnis.
+image::structure.png[Structure from Android view, 400]
 
+== Aufgabe 2
+
+Das Frontend sind in zwei Teilen eingeteilt:
+
+HomeScreen:
+
+image::HomeScreen.png[Home Frontend Bild,200]
+
+Screen von ToDos:
+
+image::ToDoScreen.png[Todos Frontend Bild,200]
+
+Man kann die ToDos auf Erledigt setzten, dabei wird es auch in Hintergrund geändert
+
+[source,java]
+----
+    public void setToDoDone(ToDo toDo, boolean done){
+        apply(model -> model.toDos[toDo.id.intValue()-1].completed = done);
+    }
+----
